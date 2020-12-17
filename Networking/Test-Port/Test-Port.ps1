@@ -2,8 +2,8 @@
 .SYNOPSIS
     Tests TCP ports.
 .DESCRIPTION
-    Tests TCP ports by trying to connect asynchronously 
-    to the specified host and port. ConnectAsync method is used
+    Tests TCP ports by trying to connect to the specified 
+    host and port. ConnectAsync method is used
     instead of default constructor because you can specify 
     a timeout which is desirable seeing as it's much faster
     than having the default constructor timeout. 
@@ -67,8 +67,6 @@ function Test-Port {
                     }
                 } #try end
                 catch [System.Net.Sockets.SocketException] {
-                    #$errormsg = $_.exception.message
-                    #Write-Host -Message "$($errormsg) $($Computer.ToUpper())" -ForegroundColor 'Red'
                     [PSCustomObject]@{
                         Hostname = $computer
                         IP       = $null
@@ -80,7 +78,6 @@ function Test-Port {
                 finally {
                     $TcpClient.Dispose()
                 }
-                #$TcpClient.Dispose()
             } #foreach port end
         } #foreach computer end
     } #process block end

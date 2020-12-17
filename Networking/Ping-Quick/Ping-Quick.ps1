@@ -35,7 +35,8 @@ function Ping-Quick {
         foreach ($Computer in $ComputerName) {
             try {
                 [void]([System.Net.Dns]::Resolve($Computer))
-                $Ping = [System.Net.NetworkInformation.Ping]::New().Send($computer)
+                $PingObj = [System.Net.NetworkInformation.Ping]::New()
+                $Ping = $PingObj.Send($computer) 
                 if ($Ping.Status -eq "Success") {
                     [PSCustomObject]@{
                         Status   = $Ping.Status
@@ -64,10 +65,13 @@ function Ping-Quick {
                     TTL      = $null 
                 }
             } #catch end
+            finally {
+                $PingObj.Dispose()
+            }
+            
         } #foreach end
     } #process block end
     end { 
         Write-Verbose -Message "End block..."
     } #end block end
 } #function end
-Ping-Quick -ComputerName 'google.com', 'github.com', '1.1.1.1'
