@@ -25,8 +25,8 @@ function Ping-Quick {
         [Parameter(
             Mandatory = $true, 
             HelpMessage = "Enter host or IP address. Ex: Ping-Quick -ComputerName 'github.com', '111.222.333.444'",
-            ValueFromPipeline,
-            Position = 0
+            ValueFromPipeline
+            #Position = 0
         )]
         [string[]]$ComputerName
     ) #param block end
