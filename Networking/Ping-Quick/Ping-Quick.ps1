@@ -1,3 +1,21 @@
+<#
+.SYNOPSIS
+    Pings the spcified IP/host(s).
+.DESCRIPTION
+    Pings the specified IP/host(s) using the Ping class
+    and builds/outputs an object with the results.
+    Mainly wrote this to check hosts quicker than the
+    Test-NetConnection cmdlet and the usual ping utility. 
+.EXAMPLE
+    Ping-Quick -ComputerName 'github.com', '111.222.333.444'
+    Explanation of what the example does
+.INPUTS
+    Hostname(s) or IP address(es).
+.OUTPUTS
+    Host info and ping results.
+.NOTES
+    N/A
+#>
 function Ping-Quick {
     [CmdletBinding()]
     param(
@@ -17,8 +35,7 @@ function Ping-Quick {
         foreach ($Computer in $ComputerName) {
             try {
                 [void]([System.Net.Dns]::Resolve($Computer))
-                $PingObj = New-Object System.Net.NetworkInformation.Ping
-                $Ping = $PingObj.Send($Computer)
+                $Ping = [System.Net.NetworkInformation.Ping]::New().Send($computer)
                 if ($Ping.Status -eq "Success") {
                     [PSCustomObject]@{
                         Status   = $Ping.Status
@@ -37,11 +54,8 @@ function Ping-Quick {
                         TTL      = $Ping.Options.Ttl 
                     }
                 }
-                $PingObj.Dispose()
             } #try end
             catch [System.Net.Sockets.SocketException] {
-                #$errormsg = $_.exception.message
-                #Write-Error -Message "$($errormsg) $($Computer.ToUpper())"
                 [PSCustomObject]@{
                     Status   = $_.exception.message
                     IP       = $null
@@ -56,3 +70,4 @@ function Ping-Quick {
         Write-Verbose -Message "End block..."
     } #end block end
 } #function end
+Ping-Quick -ComputerName 'google.com', 'github.com', '1.1.1.1'

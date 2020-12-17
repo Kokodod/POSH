@@ -44,14 +44,15 @@ function Test-Port {
             foreach ($p in $Port) {
                 try {
                     $ResolutionTest = [System.Net.Dns]::Resolve($computer)
-                    $TcpClient = [System.Net.Sockets.TcpClient]::New().ConnectAsync($computer, $p).Wait(1000)
+                    $TcpClient = [System.Net.Sockets.TcpClient]::New()
+                    $TcpCon = $TcpClient.ConnectAsync($computer, $p)
                     #Start-Sleep -Milliseconds 100
-                    if ($TcpClient -eq $true) {
+                    if ($TcpCon.Wait(1000) -eq $true) {
                         [PSCustomObject]@{
                             Hostname = $computer
                             IP       = $ResolutionTest.AddressList.IPAddressToString
                             Port     = $p 
-                            Success  = $TcpClient
+                            Success  = $TcpClient.Connected
                             Message  = $null
                         }
                     }
@@ -60,23 +61,26 @@ function Test-Port {
                             Hostname = $computer
                             IP       = $ResolutionTest.AddressList.IPAddressToString
                             Port     = $p
-                            Success  = $TcpClient
+                            Success  = $TcpClient.Connected
                             Message  = $null
                         }
                     }
-                    #$TcpClient.Dispose()
                 } #try end
                 catch [System.Net.Sockets.SocketException] {
                     #$errormsg = $_.exception.message
                     #Write-Host -Message "$($errormsg) $($Computer.ToUpper())" -ForegroundColor 'Red'
                     [PSCustomObject]@{
-                        Hostname  = $computer
-                        IP        = $null
-                        Port      = $p
-                        Connected = $TcpClient
-                        Message   = $_.exception.message
+                        Hostname = $computer
+                        IP       = $null
+                        Port     = $p
+                        Success  = $TcpClient.Connected
+                        Message  = $_.exception.message
                     }
                 } #catch end
+                finally {
+                    $TcpClient.Dispose()
+                }
+                #$TcpClient.Dispose()
             } #foreach port end
         } #foreach computer end
     } #process block end
