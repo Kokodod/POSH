@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+    Tests TCP ports.
+.DESCRIPTION
+    Tests TCP ports by trying to connect asynchronously 
+    to the specified host and port. ConnectAsync method is used
+    instead of default constructor because you can specify 
+    a timeout which is desirable seeing as it's much faster
+    than having the default constructor timeout. 
+.EXAMPLE
+    PS C:\> Test-Port -ComputerName 'google.com', '1.1.1.1' -Port 80, 1337
+    Tries to connect to the specified hosts using the specified ports.
+.INPUTS
+    Computers/hosts and port numbers. 
+.OUTPUTS
+    PSCustomObject containing info about the connection reuslt.
+.NOTES
+    N/A
+#>
 function Test-Port {
     [CmdletBinding()]
     param(
@@ -21,25 +40,42 @@ function Test-Port {
     } #begin block end
     process {
         Write-Verbose -Message "Process block..."
-        foreach ($Computer in $ComputerName) {
-            foreach ($P in $Port) {
+        foreach ($computer in $ComputerName) {
+            foreach ($p in $Port) {
                 try {
-                    [void]([System.Net.Dns]::Resolve($Computer))
-                    $TcpClientObj = New-Object System.Net.Sockets.TcpClient
-                    [void]($TcpClientObj.BeginConnect($Computer, $P, $null, $null))
-                    Start-Sleep -Milliseconds 100
-                    if ($TcpClientObj.Connected -eq $true) {
-                        "Create success object"
+                    $ResolutionTest = [System.Net.Dns]::Resolve($computer)
+                    $TcpClient = [System.Net.Sockets.TcpClient]::New().ConnectAsync($computer, $p).Wait(1000)
+                    #Start-Sleep -Milliseconds 100
+                    if ($TcpClient -eq $true) {
+                        [PSCustomObject]@{
+                            Hostname = $computer
+                            IP       = $ResolutionTest.AddressList.IPAddressToString
+                            Port     = $p 
+                            Success  = $TcpClient
+                            Message  = $null
+                        }
                     }
                     else {
-                        "Create failure object"
+                        [PSCustomObject]@{
+                            Hostname = $computer
+                            IP       = $ResolutionTest.AddressList.IPAddressToString
+                            Port     = $p
+                            Success  = $TcpClient
+                            Message  = $null
+                        }
                     }
-                    $TcpClientObj.Dispose()
+                    #$TcpClient.Dispose()
                 } #try end
                 catch [System.Net.Sockets.SocketException] {
                     #$errormsg = $_.exception.message
                     #Write-Host -Message "$($errormsg) $($Computer.ToUpper())" -ForegroundColor 'Red'
-                    "Create error object"
+                    [PSCustomObject]@{
+                        Hostname  = $computer
+                        IP        = $null
+                        Port      = $p
+                        Connected = $TcpClient
+                        Message   = $_.exception.message
+                    }
                 } #catch end
             } #foreach port end
         } #foreach computer end
