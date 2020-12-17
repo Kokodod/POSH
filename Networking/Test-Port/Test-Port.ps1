@@ -11,77 +11,79 @@
     PS C:\> Test-Port -ComputerName 'google.com', '1.1.1.1' -Port 80, 1337
     Tries to connect to the specified hosts using the specified ports.
 .INPUTS
-    Computers/hosts and port numbers. 
+    [System.String[]], [System.Int32[]] 
 .OUTPUTS
-    PSCustomObject containing info about the connection reuslt.
+    PSObject
 .NOTES
     N/A
 #>
 function Test-Port {
     [CmdletBinding()]
+    [OutputType([psobject])]
     param(
         [Parameter(
             Mandatory = $true, 
-            HelpMessage = "Enter computer name(s), ex: Test-TcpPort -ComputerName 'comp1', 'comp2', 'comp3'",
+            HelpMessage = "Enter comp name(s), ex: Test-TcpPort -ComputerName 'github.com', '111.222.333.444' -Port 80",
             ValueFromPipeline,
-            Position = 1
+            Position = 0
         )]
         [string[]]$ComputerName,
         [Parameter(
-            Mandatory = $true, 
-            HelpMessage = "Enter port(s), ex: Test-TcpPort -ComputerName 'comp1' -Port 80",
+            #Mandatory = $true, 
+            HelpMessage = "Enter port(s), ex: Test-TcpPort -ComputerName 'github.com', '111.222.333.444' -Port 80",
             ValueFromPipeline,
-            Position = 2
+            Position = 1
         )]
-        [int[]]$Port
+        [int[]]$Port = 80
     ) #Param block end
     begin { 
         Write-Verbose -Message "Begin block..."
     } #begin block end
     process {
         Write-Verbose -Message "Process block..."
-        foreach ($computer in $ComputerName) {
+        foreach ($comp in $ComputerName) {
             foreach ($p in $Port) {
                 try {
-                    $ResolutionTest = [System.Net.Dns]::Resolve($computer)
+                    $ResolveTest = [System.Net.Dns]::Resolve($comp)
                     $TcpClient = [System.Net.Sockets.TcpClient]::New()
-                    $TcpCon = $TcpClient.ConnectAsync($computer, $p)
+                    $TcpCon = $TcpClient.ConnectAsync($comp, $p)
                     #Start-Sleep -Milliseconds 100
                     if ($TcpCon.Wait(1000) -eq $true) {
                         [PSCustomObject]@{
-                            Hostname = $computer
-                            IP       = $ResolutionTest.AddressList.IPAddressToString
-                            Port     = $p 
-                            Success  = $TcpClient.Connected
-                            Message  = $null
+                            ComputerName = $comp
+                            IP           = $ResolveTest.AddressList.IPAddressToString
+                            Port         = $p 
+                            Success      = $TcpClient.Connected
+                            Message      = $null
                         }
                     }
                     else {
                         [PSCustomObject]@{
-                            Hostname = $computer
-                            IP       = $ResolutionTest.AddressList.IPAddressToString
-                            Port     = $p
-                            Success  = $TcpClient.Connected
-                            Message  = $null
+                            ComputerName = $comp
+                            IP           = $ResolveTest.AddressList.IPAddressToString
+                            Port         = $p
+                            Success      = $TcpClient.Connected
+                            Message      = $null
                         }
                     }
                 } #try end
                 catch [System.Net.Sockets.SocketException] {
                     [PSCustomObject]@{
-                        Hostname = $computer
-                        IP       = $null
-                        Port     = $p
-                        Success  = $TcpClient.Connected
-                        Message  = $_.exception.message
+                        ComputerName = $comp
+                        IP           = $null
+                        Port         = $p
+                        Success      = $TcpClient.Connected
+                        Message      = $_.exception.message
                     }
                 } #catch end
                 finally {
                     $TcpClient.Dispose()
                 }
             } #foreach port end
-        } #foreach computer end
+        } #foreach comp end
     } #process block end
     end {
         Write-Verbose -Message "End block..."
     } #end block end
 } #function end
+Test-Port -ComputerName gp.se -port 500

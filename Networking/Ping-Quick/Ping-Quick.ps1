@@ -8,22 +8,25 @@
     Test-NetConnection cmdlet and the usual ping utility. 
 .EXAMPLE
     Ping-Quick -ComputerName 'github.com', '111.222.333.444'
-    Explanation of what the example does
+    Sends an ICMP request to hosts 'github.com' and '111.222.333.444'
+    and outputs results of the reply if there is one and the error
+    if there is none.
 .INPUTS
-    Hostname(s) or IP address(es).
+    [System.String[]]
 .OUTPUTS
-    Host info and ping results.
+    PSObject
 .NOTES
     N/A
 #>
 function Ping-Quick {
     [CmdletBinding()]
+    [OutputType([psobject])]
     param(
         [Parameter(
             Mandatory = $true, 
-            HelpMessage = "Enter hostname(s) or IP address(es). Ex: Ping-Quick -ComputerName 'comp1', 'comp2', 'comp3'",
+            HelpMessage = "Enter host or IP address. Ex: Ping-Quick -ComputerName 'github.com', '111.222.333.444'",
             ValueFromPipeline,
-            Position = 1
+            Position = 0
         )]
         [string[]]$ComputerName
     ) #param block end
@@ -32,16 +35,16 @@ function Ping-Quick {
     } #begin block end
     process {
         Write-Verbose -Message "Process block..."
-        foreach ($Computer in $ComputerName) {
+        foreach ($comp in $ComputerName) {
             try {
-                [void]([System.Net.Dns]::Resolve($Computer))
+                [void]([System.Net.Dns]::Resolve($comp))
                 $PingObj = [System.Net.NetworkInformation.Ping]::New()
-                $Ping = $PingObj.Send($computer) 
+                $Ping = $PingObj.Send($comp) 
                 if ($Ping.Status -eq "Success") {
                     [PSCustomObject]@{
                         Status   = $Ping.Status
                         IP       = $Ping.Address
-                        Hostname = $Computer
+                        Hostname = $comp
                         Time     = $Ping.RoundtripTime
                         TTL      = $Ping.Options.Ttl 
                     }
@@ -50,7 +53,7 @@ function Ping-Quick {
                     [PSCustomObject]@{
                         Status   = $Ping.Status
                         IP       = $Ping.Address
-                        Hostname = $Computer
+                        Hostname = $comp
                         Time     = $Ping.RoundtripTime
                         TTL      = $Ping.Options.Ttl 
                     }
@@ -60,7 +63,7 @@ function Ping-Quick {
                 [PSCustomObject]@{
                     Status   = $_.exception.message
                     IP       = $null
-                    Hostname = $Computer
+                    Hostname = $comp
                     Time     = $null
                     TTL      = $null 
                 }
