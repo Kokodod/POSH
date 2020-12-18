@@ -1,4 +1,5 @@
-<#
+function Ping-Quick {
+    <#
 .SYNOPSIS
     Pings the spcified IP/host(s).
 .DESCRIPTION
@@ -7,10 +8,10 @@
     Mainly wrote this to check hosts quicker than the
     Test-NetConnection cmdlet and the usual ping utility. 
 .EXAMPLE
-    Ping-Quick -ComputerName 'github.com', '111.222.333.444'
-    Sends an ICMP request to hosts 'github.com' and '111.222.333.444'
-    and outputs results of the reply if there is one and the error
-    if there is none.
+    Ping-Quick -ComputerName 'server', '1.2.3.4'
+    Sends an ICMP request to host 'server' and IP address '1.2.3.4'
+    and outputs the results of the echo reply if there is one 
+    and the error if there is none.
 .INPUTS
     [System.String[]]
 .OUTPUTS
@@ -18,63 +19,71 @@
 .NOTES
     N/A
 #>
-function Ping-Quick {
     [CmdletBinding()]
     [OutputType([psobject])]
     param(
         [Parameter(
-            Mandatory = $true, 
-            HelpMessage = "Enter host or IP address. Ex: Ping-Quick -ComputerName 'github.com', '111.222.333.444'",
-            ValueFromPipeline
-            #Position = 0
+            Mandatory, 
+            HelpMessage = "Enter host or IP address. Ex: Ping-Quick -ComputerName 'server', '1.2.3.4",
+            ValueFromPipeline,
+            Position = 0
         )]
-        [string[]]$ComputerName
+        [string[]]$ComputerName,
+        [Parameter( 
+            HelpMessage = "Enter a timeout (minimum is 500ms) in milliseconds to wait for a reply. Ex: Ping-Quick -ComputerName 'server', '1.2.3.4' -TimeOut 1000",
+            Position = 1
+        )]
+        [Int]$TimeOut = 4000
     ) #param block end
+    
     begin {
         Write-Verbose -Message "Begin block..."
+        
+        $PingObj = [System.Net.NetworkInformation.Ping]::New()
+
     } #begin block end
+    
     process {
         Write-Verbose -Message "Process block..."
-        foreach ($comp in $ComputerName) {
-            try {
-                [void]([System.Net.Dns]::Resolve($comp))
-                $PingObj = [System.Net.NetworkInformation.Ping]::New()
-                $Ping = $PingObj.Send($comp) 
-                if ($Ping.Status -eq "Success") {
-                    [PSCustomObject]@{
-                        Status   = $Ping.Status
-                        IP       = $Ping.Address
-                        Hostname = $comp
-                        Time     = $Ping.RoundtripTime
-                        TTL      = $Ping.Options.Ttl 
-                    }
-                }
-                else {
-                    [PSCustomObject]@{
-                        Status   = $Ping.Status
-                        IP       = $Ping.Address
-                        Hostname = $comp
-                        Time     = $Ping.RoundtripTime
-                        TTL      = $Ping.Options.Ttl 
-                    }
-                }
-            } #try end
-            catch [System.Net.Sockets.SocketException] {
-                [PSCustomObject]@{
-                    Status   = $_.exception.message
-                    IP       = $null
-                    Hostname = $comp
-                    Time     = $null
-                    TTL      = $null 
-                }
-            } #catch end
-            finally {
-                $PingObj.Dispose()
-            }
+        
+        foreach ( $Comp in $ComputerName ) {
             
+            try {
+                
+                $HostName = [System.Net.Dns]::Resolve( $Comp )
+                $PingReply = $PingObj.Send( $Comp, $TimeOut ) 
+                
+                [PSCustomObject]@{
+                    Status        = $PingReply.Status
+                    IP            = $PingReply.Address
+                    Hostname      = $HostName.HostName
+                    RoundTripTime = $PingReply.RoundtripTime
+                    TimeToLive    = $PingReply.Options.Ttl 
+                }
+
+            } #try end
+            
+            catch [System.Net.Sockets.SocketException] {
+
+                [PSCustomObject]@{
+                    Status        = $_.Exception.Message
+                    IP            = $Comp
+                    Hostname      = $Comp
+                    RoundTripTime = $null
+                    TimeToLive    = $null 
+                }
+
+            } #catch end
+
         } #foreach end
+
     } #process block end
+    
     end { 
         Write-Verbose -Message "End block..."
+       
+        $PingObj.Dispose()
+
     } #end block end
+
 } #function end
