@@ -58,7 +58,8 @@ function Ping-Quick {
                     IP            = $PingReply.Address
                     Hostname      = $HostName.HostName
                     RoundTripTime = $PingReply.RoundtripTime
-                    TimeToLive    = $PingReply.Options.Ttl 
+                    TimeToLive    = $PingReply.Options.Ttl
+                    TimeOut       = $TimeOut 
                 }
 
             } #try end
@@ -70,7 +71,8 @@ function Ping-Quick {
                     IP            = $Comp
                     Hostname      = $Comp
                     RoundTripTime = $null
-                    TimeToLive    = $null 
+                    TimeToLive    = $null
+                    TimeOut       = $TimeOut 
                 }
 
             } #catch end
