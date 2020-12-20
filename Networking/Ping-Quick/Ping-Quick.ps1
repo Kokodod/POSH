@@ -29,6 +29,7 @@ function Ping-Quick {
             Position = 0
         )]
         [string[]]$ComputerName,
+        [ValidateRange(500, 50000)]
         [Parameter( 
             HelpMessage = "Enter a timeout (minimum is 500ms) in milliseconds to wait for a reply. Ex: Ping-Quick -ComputerName 'server', '1.2.3.4' -TimeOut 1000",
             Position = 1
