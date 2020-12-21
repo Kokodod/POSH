@@ -80,6 +80,12 @@ function Test-PingPsCore {
 
             } #catch end
 
+            finally {
+
+                $PingObj.Dispose()
+
+            }
+
         } #foreach end
 
     } #process block end
