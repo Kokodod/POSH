@@ -8,7 +8,7 @@ function Test-Ping {
     Mainly wrote this to check hosts quicker than the
     Test-NetConnection cmdlet and the usual ping utility. 
 .EXAMPLE
-    Ping-Quick -ComputerName 'server', '1.2.3.4'
+    Test-Ping -ComputerName 'server', '1.2.3.4'
     Sends an ICMP request to host 'server' and IP address '1.2.3.4'
     and outputs the results of the echo reply if there is one 
     and the error if there is none.
@@ -24,14 +24,14 @@ function Test-Ping {
     param(
         [Parameter(
             Mandatory, 
-            HelpMessage = "Enter host or IP address. Ex: Ping-Quick -ComputerName 'server', '1.2.3.4",
+            HelpMessage = "Enter host or IP address. Ex: Test-Ping -ComputerName 'server', '1.2.3.4",
             ValueFromPipeline,
             Position = 0
         )]
         [string[]]$ComputerName,
         [ValidateRange(500, 50000)]
         [Parameter( 
-            HelpMessage = "Enter a timeout (minimum is 500ms) in milliseconds to wait for a reply. Ex: Ping-Quick -ComputerName 'server', '1.2.3.4' -TimeOut 1000",
+            HelpMessage = "Enter a timeout (minimum is 500ms) in milliseconds to wait for a reply. Ex: Test-Ping -ComputerName 'server', '1.2.3.4' -TimeOut 1000",
             Position = 1
         )]
         [Int]$TimeOut = 4000
@@ -48,6 +48,8 @@ function Test-Ping {
         Write-Verbose -Message "Process block..."
         
         foreach ( $Comp in $ComputerName ) {
+
+            Write-Verbose -Message "Trying to ping $Comp"
             
             try {
                 

@@ -1,5 +1,5 @@
 function Test-Port {
-    <#
+<#
 .SYNOPSIS
     Tests TCP ports.
 .DESCRIPTION
@@ -23,13 +23,13 @@ function Test-Port {
     param(
         [Parameter(
             Mandatory, 
-            HelpMessage = "Enter hostname or IP, default port is 80. Ex: Test-TcpPort -ComputerName 'server', '1.2.3.4'",
+            HelpMessage = "Enter hostname or IP, default port is 80. Ex: Test-Port -ComputerName 'server', '1.2.3.4'",
             ValueFromPipeline,
             Position = 0
         )]
         [string[]]$ComputerName,
         [Parameter( 
-            HelpMessage = "Enter port, default port is 80. Ex: Test-TcpPort -ComputerName 'server', '1.2.3.4' -Port 80",
+            HelpMessage = "Enter port, default port is 80. Ex: Test-Port -ComputerName 'server', '1.2.3.4' -Port 80",
             ValueFromPipeline,
             Position = 1
         )]
