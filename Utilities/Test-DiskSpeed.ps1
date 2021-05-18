@@ -18,7 +18,7 @@ function Test-DiskSpeed {
     param(
         [Parameter(
             Mandatory
-            , HelpMessage = 'Enter the designated letter of the drive to be tested, ex: C'
+            , HelpMessage = 'Enter the designated letter of the drive to be tested, ex: "C"'
         )]
         [ValidatePattern("[a-zA-Z]")]
         [string]$DriveLetter,
@@ -30,14 +30,14 @@ function Test-DiskSpeed {
         [Parameter(
             HelpMessage = 'Enter size of test file, ex: 2.'
         )]
-        [String]$TestFileSize = 2, 
+        [Int]$TestFileSize = 2, 
         [ValidatePattern("^([0-9]|[1-9][0-9]|[1-9][0-9][0-9])$")]
         [Parameter(
-            HelpMessage = 'Enter warm up time in seconds before main test is run. Default is 5, max is 999'
+            HelpMessage = 'Enter warm up time in seconds before test is run. Default is 5, max is 999.'
         )]
         [Int]$WarmUpTime = 5,
         [Parameter(
-            HelpMessage = 'Specify if the file created for the test is to be removed after the test is done. Default is $false'
+            HelpMessage = 'Specify if the file created for the test is to be removed after the test is done. Default is false.'
         )]
         [Bool]$RemoveTestFile = $false
     )
@@ -49,12 +49,13 @@ function Test-DiskSpeed {
     $hostname = $env:COMPUTERNAME
     $date = Get-Date -Format "yyyyMMddHHmm"
     $drive = ( Get-Volume ).where( { $_.DriveLetter -eq "$DriveLetter" } )
-    $threads = "-t{0}" -f ( Get-WmiObject win32_processor ).ThreadCount
+    $threads = "-t{0}" -f ( Get-CimInstance -ClassName CIM_Processor ).ThreadCount
     $writes = "-w{0}" -f $WritePercentage
     $warmup = "-W{0}" -f $WarmUpTime
-    $filesize = "-c{0}" -f $TestFileSize
-    $archivepath = "C:\StorageTestArchive\{0}_{1}" -f $drive.DriveLetter, $drive.FileSystemLabel
+    $filesize = "-c{0}G" -f $TestFileSize
+    $archivepath = "C:\StorageTestArchive\{0}" -f $drive.DriveLetter
     $testfilepath = "{0}:\StorageTest\IOTestFile.dat" -f $drive.DriveLetter
+
     $formatresult = @(
         $archivepath
         $hostname, 
@@ -62,17 +63,29 @@ function Test-DiskSpeed {
         $drive.DriveLetter, 
         $date
     )
-    $resultfilepath = "{0}\diskspd_resultfile_{1}_{2}_{3}_{4}.txt" -f $formatresult
+    $resultfilepath = "{0}\diskspd_resultfile_{1}_{2}_{3}_{4}.xml" -f $formatresult
 
     if ($true -ne (Test-Path -Path $archivepath)) {
         [void](New-Item -Path $archivepath -ItemType Directory)
     }
 
-    #https://github.com/Microsoft/diskspd/wiki/Command-line-and-parameters
-    C:\DiskSpd\diskspd.exe -b8K -d15 -h -L -o32 $threads $warmup -r $writes $filesize $testfilepath > $resultfilepath
+    <#
+    https://github.com/Microsoft/diskspd/wiki/Command-line-and-parameters
+    https://docs.microsoft.com/en-us/azure-stack/hci/manage/diskspd-overview
+    #>
+
+    C:\DiskSpd\diskspd.exe -b8K -d15 -h -L -o32 $threads $warmup -r $writes -Rxml $filesize $testfilepath > $resultfilepath
 
     if ( $true -eq $RemoveTestFile ) {
-        Write-Verbose "Removing $testfile..."
-        [void](Remove-Item -Path $testfile)
+        Write-Verbose "Removing $testfilepath..."
+        [void](Remove-Item -Path $testfilepath)
     }
+    
+    [XML]$result = Get-Content $resultfilepath
+
+    [PSCustomObject]@{
+        Atr1 = $result.results
+    }
+   
 }
+
