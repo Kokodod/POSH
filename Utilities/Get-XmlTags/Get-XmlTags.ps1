@@ -1,18 +1,18 @@
 function Get-XmlTags {
     <#
 .SYNOPSIS
-    Wrapper for the Microsoft DiskSpd utility.
+    Gets all tag names in an XML file.
 .DESCRIPTION
-    Test storage IO performance and outputs to a file.  
+    Gets all tag names in an XML file.  
 .EXAMPLE
-    PS C:\> Test-DiskSpeed -DriveLetter "C"
-    Runs a test using the function's default parameter arguments. 
+    PS C:\> Get-Xmltags -Path "C:\temp\xmlfile.xml"
+    Outputs all tags from the XML file. 
 .INPUTS
-    [System.String[]], [System.Int32[]] 
+    [System.String].
 .OUTPUTS
-    PSObject and/or .txt file.
+    [System.String].
 .NOTES
-    N/A
+    WIP
 #>  
     [CmdletBinding()]
     param(
